@@ -23,9 +23,12 @@ public_users.post("/register", (req,res) => {
 public_users.get('/', async function (req, res) {
   try {
     const bookList = await Promise.resolve(Object.values(books));
+    if (!bookList || bookList.length === 0) {
+      return res.status(404).json({ message: "No books found" });
+    }
     return res.status(200).json(bookList);
   } catch (error) {
-    return res.status(500).json({ message: "Error retrieving books" });
+    return res.status(500).json({ message: "Error retrieving books: " + error.message });
   }
 });
 
@@ -33,9 +36,12 @@ public_users.get('/', async function (req, res) {
 public_users.get('/isbn/:isbn', async function (req, res) {
   try {
     const response = await axios.get(`${BASE_URL}/isbn/${req.params.isbn}`);
+    if (!response.data) {
+      return res.status(404).json({ message: "No book found for ISBN: " + req.params.isbn });
+    }
     return res.status(200).json(response.data);
   } catch (error) {
-    return res.status(500).json({ message: "Error retrieving book" });
+    return res.status(404).json({ message: "No book found for ISBN: " + req.params.isbn });
   }
 });
 
@@ -43,9 +49,12 @@ public_users.get('/isbn/:isbn', async function (req, res) {
 public_users.get('/author/:author', async function (req, res) {
   try {
     const response = await axios.get(`${BASE_URL}/author/${req.params.author}`);
+    if (!response.data || response.data.length === 0) {
+      return res.status(404).json({ message: "No books found for author: " + req.params.author });
+    }
     return res.status(200).json(response.data);
   } catch (error) {
-    return res.status(500).json({ message: "Error retrieving books" });
+    return res.status(404).json({ message: "No books found for author: " + req.params.author });
   }
 });
 
@@ -53,9 +62,12 @@ public_users.get('/author/:author', async function (req, res) {
 public_users.get('/title/:title', async function (req, res) {
   try {
     const response = await axios.get(`${BASE_URL}/title/${req.params.title}`);
+    if (!response.data || response.data.length === 0) {
+      return res.status(404).json({ message: "No books found for title: " + req.params.title });
+    }
     return res.status(200).json(response.data);
   } catch (error) {
-    return res.status(500).json({ message: "Error retrieving books" });
+    return res.status(404).json({ message: "No books found for title: " + req.params.title });
   }
 });
 
@@ -63,9 +75,12 @@ public_users.get('/title/:title', async function (req, res) {
 public_users.get('/review/:isbn', async function (req, res) {
   try {
     const book = await Promise.resolve(books[req.params.isbn]);
+    if (!book) {
+      return res.status(404).json({ message: "No book found for ISBN: " + req.params.isbn });
+    }
     return res.status(200).json(book.reviews);
   } catch (error) {
-    return res.status(500).json({ message: "Error retrieving reviews" });
+    return res.status(500).json({ message: "Error retrieving reviews: " + error.message });
   }
 });
 
@@ -78,7 +93,7 @@ public_users.put("/review/:isbn", (req, res) => {
     return res.status(400).json({ message: "Username and review are required" });
   }
   if (!books[isbn]) {
-    return res.status(404).json({ message: "Book not found" });
+    return res.status(404).json({ message: "No book found for ISBN: " + isbn });
   }
   books[isbn].reviews[username] = review;
   return res.status(200).json({ message: "Review added/updated successfully", reviews: books[isbn].reviews });
@@ -92,7 +107,7 @@ public_users.delete("/review/:isbn", (req, res) => {
     return res.status(400).json({ message: "Username is required" });
   }
   if (!books[isbn]) {
-    return res.status(404).json({ message: "Book not found" });
+    return res.status(404).json({ message: "No book found for ISBN: " + isbn });
   }
   delete books[isbn].reviews[username];
   return res.status(200).json({ message: "Review deleted successfully", reviews: books[isbn].reviews });
