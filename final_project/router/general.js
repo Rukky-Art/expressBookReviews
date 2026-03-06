@@ -76,4 +76,20 @@ public_users.get('/review/:isbn',function (req, res) {
   const book = books[isbn];
   return res.status(200).json(book.reviews);
 });
+
+// add code to delete a review
+public_users.delete("/auth/review/:isbn", (req, res) => {
+  const { isbn } = req.params;
+  const username = req.session?.authorization?.username;  
+  if(!username){
+    return res.status(401).json({ message: "User not logged in" });
+  } else{
+    if(books[isbn]){
+      delete books[isbn].reviews[username];
+      return res.status(200).json({ message: "Review deleted successfully" });
+    } else {
+      return res.status(404).json({ message: "Book not found" });
+    }
+  }
+});       
 module.exports.general = public_users;
